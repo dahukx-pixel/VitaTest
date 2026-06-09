@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/Modules/">
+    <Project Path="VitaTest.Modules.Incomes/VitaTest.Modules.Incomes.csproj" Id="7ef51e68-ae41-4837-bb65-a65fe4d7452b" />
+    <Project Path="VitaTest.Modules.Orders/VitaTest.Modules.Orders.csproj" Id="5ea80853-2176-4d30-a02d-4daa1b45216c" />
+    <Project Path="VitaTest.Modules.Payments/VitaTest.Modules.Payments.csproj" Id="8cca6e9f-ce2e-4fee-8c28-9edd2fc406f0" />
+    <Project Path="VitaTest.Modules.Settings/VitaTest.Modules.Settings.csproj" Id="74ce4606-d2f9-4a18-a3b1-53b2e473d091" />
+  </Folder>
+  <Project Path="VitaTest.AppCore/VitaTest.AppCore.csproj" />
+  <Project Path="VitaTest.Domain/VitaTest.Domain.csproj" />
+  <Project Path="VitaTest.Infrastructure/VitaTest.Infrastructure.csproj" Id="d1844c1b-76e0-4bde-9de4-00f455bd739d" />
+  <Project Path="VitaTest/VitaTest.csproj" />
+</Solution>

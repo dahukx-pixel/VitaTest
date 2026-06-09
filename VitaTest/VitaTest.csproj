@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.8" />
+    <PackageReference Include="Prism.DryIoc" Version="9.0.537" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VitaTest.AppCore\VitaTest.AppCore.csproj" />
+    <ProjectReference Include="..\VitaTest.Infrastructure\VitaTest.Infrastructure.csproj" />
+    <ProjectReference Include="..\VitaTest.Modules.Incomes\VitaTest.Modules.Incomes.csproj" />
+    <ProjectReference Include="..\VitaTest.Modules.Orders\VitaTest.Modules.Orders.csproj" />
+    <ProjectReference Include="..\VitaTest.Modules.Payments\VitaTest.Modules.Payments.csproj" />
+    <ProjectReference Include="..\VitaTest.Modules.Settings\VitaTest.Modules.Settings.csproj" />
+  </ItemGroup>
+</Project>

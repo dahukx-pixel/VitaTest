@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Prism.Wpf" Version="9.0.537" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VitaTest.AppCore\VitaTest.AppCore.csproj" />
+    <ProjectReference Include="..\VitaTest.Infrastructure\VitaTest.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

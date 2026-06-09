@@ -1,0 +1,81 @@
+﻿<Window x:Class="VitaTest.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:prism="http://prismlibrary.com/"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:core="clr-namespace:VitaTest.AppCore;assembly=VitaTest.AppCore"
+        xmlns:converters="clr-namespace:VitaTest.AppCore.Converters;assembly=VitaTest.AppCore"
+        xmlns:records="clr-namespace:VitaTest.AppCore.Records;assembly=VitaTest.AppCore"
+        prism:ViewModelLocator.AutoWireViewModel="True"
+        Title="VitaTest"
+        MinHeight="550"
+        MinWidth="480">
+
+    <Window.Resources>
+        <converters:MessageTypeToPackIconKindConverter x:Key="MessageTypeToIconConverter"/>
+        <converters:MessageTypeToBrushConverter x:Key="MessageTypeToBrushConverter"/>
+
+        <DataTemplate DataType="{x:Type records:NotificationMessage}">
+            <Viewbox MaxWidth="300">
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="{Binding Type, Converter={StaticResource MessageTypeToIconConverter}}" 
+                                             Foreground="{Binding Type, Converter={StaticResource MessageTypeToBrushConverter}}"
+                                             VerticalAlignment="Center" 
+                                             Margin="0,0,10,0"/>
+
+                    <TextBlock Text="{Binding Text}"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </Viewbox>
+        </DataTemplate>
+        
+    </Window.Resources>
+    
+    <Grid>
+        <Grid Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0">
+                <DockPanel VerticalAlignment="Top">
+
+                    <DockPanel.Resources>
+                        <Style TargetType="Button"
+                               BasedOn="{StaticResource MaterialDesignFlatButton}">
+                            <Setter Property="Command" 
+                                    Value="{Binding NavigateToCommand}"/>
+                        </Style>
+                    </DockPanel.Resources>
+
+                    <Button Content="Заказы"
+                            CommandParameter="{x:Static core:PageNames.Orders}"/>
+                    <Button Content="Платежи"
+                            CommandParameter="{x:Static core:PageNames.Payments}"/>
+                    <Button Content="Пополнения"
+                            CommandParameter="{x:Static core:PageNames.Incomes}"/>
+
+                    <Button HorizontalAlignment="Right"
+                            CommandParameter="{x:Static core:PageNames.Settings}">
+                        <Button.Content>
+                            <materialDesign:PackIcon Kind="Settings"/>
+                        </Button.Content>
+                    </Button>
+                </DockPanel>
+            </Grid>
+
+            <ContentControl Grid.Row="1"
+                            prism:RegionManager.RegionName="{x:Static core:RegionNames.MainRegion}"/>
+        </Grid>
+
+        <materialDesign:Snackbar x:Name="NotifySnackBar"  
+                                 VerticalAlignment="Bottom"
+                                 HorizontalAlignment="Left"
+                                 Margin="10"
+                                 BorderBrush="#2fab9d"
+                                 BorderThickness="1"/>
+    </Grid>
+</Window>

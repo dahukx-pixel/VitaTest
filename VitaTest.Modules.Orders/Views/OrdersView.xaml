@@ -1,0 +1,227 @@
+﻿<UserControl x:Class="VitaTest.Modules.Orders.Views.OrdersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:VitaTest.Modules.Orders.Views"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:selectors="clr-namespace:VitaTest.Modules.Orders.Selectors"
+             xmlns:converters="clr-namespace:VitaTest.AppCore.Converters;assembly=VitaTest.AppCore"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300"
+             xmlns:prism="http://prismlibrary.com/"
+             prism:ViewModelLocator.AutoWireViewModel="True" >
+
+    <UserControl.Resources>
+        <converters:BalanceToColorConverter x:Key="BalanceToColorConverter"/>
+
+        <DataTemplate x:Key="PaymentTemplate">
+            <Border Width="300"
+                    Height="250"
+                    CornerRadius="10"
+                    Padding="20">
+                <StackPanel>
+                    <TextBlock Text="Оплата заказа" 
+                               FontSize="20"
+                               FontWeight="Bold"
+                               Margin="0,0,0,20"/>
+                    
+                    <TextBlock Text="{Binding ID, StringFormat='Номер: {0}'}"
+                               Margin="0,0,0,10"/>
+                    
+                    <TextBlock Text="{Binding TotalAmount, StringFormat='Сумма: {0}р'}" 
+                               Margin="0,0,0,10"/>
+                    
+                    <TextBlock Text="{Binding BalanceToPay, StringFormat='К оплате: {0}р'}" 
+                               Margin="0,0,0,20"/>
+                    
+                    <TextBox materialDesign:HintAssist.Hint="Введите сумму оплаты" 
+                             Margin="0,0,0,20"
+                             Text="{Binding DataContext.PaySum, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    
+                    <StackPanel Orientation="Horizontal" 
+                                HorizontalAlignment="Center">
+                        
+                        <Button Content="Отмена"
+                                Width="100"
+                                Margin="0,0,10,0" 
+                                Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"/>
+                        
+                        <Button Content="Оплатить"
+                                Width="100"
+                                Command="{Binding DataContext.PayCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="DefaultTemplate">
+            <Border Width="300"
+                    Height="200"
+                    CornerRadius="10"
+                    Padding="20"
+                    Background="#2fab9d">
+                <StackPanel>
+                    <TextBlock Text="Заказ оплачен"
+                               FontSize="20"
+                               FontWeight="Bold"
+                               Margin="0,0,0,20"/>
+                    
+                    <TextBlock Text="{Binding ID, StringFormat='Номер заказа: {0}'}"
+                               Margin="0,0,0,10"/>
+                    
+                    <TextBlock Text="{Binding TotalAmount, StringFormat='Сумма: {0}р'}"
+                               Margin="0,0,0,20"/>
+                    
+                    <Button Content="Закрыть"
+                            Width="100"
+                            HorizontalAlignment="Center"
+                            Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <selectors:OrderDialogTemplateSelector x:Key="OrderDialogTemplateSelector"
+                                               PaymentTemplate="{StaticResource PaymentTemplate}"
+                                               DefaultTemplate="{StaticResource DefaultTemplate}"/>
+    </UserControl.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="100"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <TextBlock Text="Заказы"
+                       Style="{StaticResource MaterialDesignHeadline4TextBlock}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Expander HorizontalAlignment="Left"
+                      VerticalAlignment="Top"
+                      Margin="5, 0, 0, 0">
+                <Expander.Header>
+                    <TextBlock Text="Новый платёж"/>
+                </Expander.Header>
+                <StackPanel Orientation="Horizontal"
+                            Margin="10">
+                    <Button Content="Создать"
+                            Margin="0, 0, 10, 0"
+                            VerticalAlignment="Center"
+                            Command="{Binding CreateOrderCommand}"/>
+                    <TextBox Text="{Binding NewOrderTotalAmount}"
+                             MinWidth="100"
+                             VerticalAlignment="Center"
+                             materialDesign:HintAssist.Hint="Сумма платежа (р)"/>
+                </StackPanel>
+            </Expander>
+
+            <DockPanel HorizontalAlignment="Right"
+                       VerticalAlignment="Center"
+                       Margin="10">
+
+                <DockPanel.Resources>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="FontSize" Value="17"/>
+                    </Style>
+                </DockPanel.Resources>
+
+                <TextBlock Text="{Binding Balance, StringFormat='Баланс: {0}р'}"/>
+            </DockPanel>
+        </Grid>
+
+        <materialDesign:DialogHost Grid.Row="2"
+                                   CloseOnClickAway="True"
+                                   Identifier="MainDialogHost">
+            <Grid>
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding Orders}">
+
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="5"
+                                        CornerRadius="10"
+                                        Background="{Binding BalanceToPay, Converter={StaticResource BalanceToColorConverter}}"
+                                        Width="250"
+                                        Height="280"
+                                        Padding="10">
+                                    <Viewbox>
+                                        <StackPanel>
+
+                                            <DockPanel>
+
+                                                <DockPanel.Resources>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                        <Setter Property="FontSize" Value="17"/>
+                                                    </Style>
+                                                </DockPanel.Resources>
+
+                                                <TextBlock Text="Номер: "/>
+                                                <TextBlock Text="{Binding ID}"/>
+                                            </DockPanel>
+
+                                            <DockPanel>
+                                                <GroupBox Header="Сумма">
+                                                    <DockPanel>
+                                                        <TextBlock Text="{Binding TotalAmount}"/>
+                                                        <TextBlock Text="р"/>
+                                                    </DockPanel>
+                                                </GroupBox>
+                                                <GroupBox Header="Оплачено">
+                                                    <DockPanel>
+                                                        <TextBlock Text="{Binding PaidAmount}"/>
+                                                        <TextBlock Text="р"/>
+                                                    </DockPanel>
+                                                </GroupBox>
+                                                <GroupBox Header="Осталось внести">
+                                                    <DockPanel>
+                                                        <TextBlock Text="{Binding BalanceToPay}"/>
+                                                        <TextBlock Text="р"/>
+                                                    </DockPanel>
+                                                </GroupBox>
+                                            </DockPanel>
+                                            <DockPanel LastChildFill="False" 
+                                                       HorizontalAlignment="Center"
+                                                       Margin="10">
+                                                <GroupBox Header="Создано">
+                                                    <TextBlock Text="{Binding CreatedAt, StringFormat=dd.MM.yyyy}"/>
+                                                </GroupBox>
+                                                <GroupBox Header="Изменено">
+                                                    <TextBlock Text="{Binding UpdatedAt, StringFormat=dd.MM.yyyy}"/>
+                                                </GroupBox>
+                                            </DockPanel>
+
+                                            <Button Content="Оплатить"
+                                                    Margin="10"
+                                                    Width="100"
+                                                    Click="PayButtonClick"
+                                                    Tag="{Binding}"/>
+                                        </StackPanel>
+                                    </Viewbox>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+
+            <materialDesign:DialogHost.DialogContentTemplateSelector>
+                <StaticResource ResourceKey="OrderDialogTemplateSelector"/>
+            </materialDesign:DialogHost.DialogContentTemplateSelector>
+
+        </materialDesign:DialogHost>
+    </Grid>
+</UserControl>
