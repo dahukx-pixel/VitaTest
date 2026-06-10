@@ -56,7 +56,7 @@ namespace VitaTest.Modules.Incomes.ViewModels
 
         private async void AddIncome()
         {
-            if (IncomeSum < 0)
+            if (IncomeSum <= 0)
             {
                 _notificationService.Notify("Сумма не может быть меньше или равна 0.", NotifyType.Warning);
                 return;
