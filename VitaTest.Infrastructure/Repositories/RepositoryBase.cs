@@ -23,6 +23,7 @@ namespace VitaTest.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
+                //TODO: logger
                 return null;
             }
         }
@@ -35,6 +36,7 @@ namespace VitaTest.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
+                //TODO: logger
                 return null;
             }
         }
@@ -47,6 +49,7 @@ namespace VitaTest.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
+                //TODO: logger
                 return null;
             }
         }
@@ -61,6 +64,7 @@ namespace VitaTest.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
+                //TODO: logger
                 return null;
             }
         }
@@ -75,6 +79,7 @@ namespace VitaTest.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
+                //TODO: logger
                 return null;
             }
         }
@@ -89,7 +94,7 @@ namespace VitaTest.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-
+                //TODO: logger
             }
         }
 
@@ -103,7 +108,7 @@ namespace VitaTest.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-
+                //TODO: logger
             }
         }
 
@@ -116,7 +121,7 @@ namespace VitaTest.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-
+                //TODO: logger
             }
         }
 
@@ -131,7 +136,7 @@ namespace VitaTest.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-
+                //TODO: logger
             }
         }
 
@@ -147,7 +152,7 @@ namespace VitaTest.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-
+                //TODO: logger
             }
         }
     }
