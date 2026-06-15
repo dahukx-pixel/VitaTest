@@ -2,7 +2,6 @@
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using VitaTest.AppCore.Enums;
@@ -24,6 +23,9 @@ namespace VitaTest.Modules.Orders.ViewModels
         private decimal _paySum;
 
         private List<Order> _orders;
+        private List<Income> _availableIncomes;
+
+        private Income _selectedIncome;
 
         public decimal NewOrderTotalAmount
         {
@@ -47,6 +49,18 @@ namespace VitaTest.Modules.Orders.ViewModels
         {
             get => _orders;
             set => SetProperty(ref _orders, value);
+        }
+
+        public List<Income> AvailableIncomes
+        {
+            get => _availableIncomes;
+            set => SetProperty(ref _availableIncomes, value);
+        }
+
+        public Income SelectedIncome
+        {
+            get => _selectedIncome;
+            set => SetProperty(ref _selectedIncome, value);
         }
 
         public ICommand CreateOrderCommand => new DelegateCommand(CreateOrder);
@@ -73,7 +87,8 @@ namespace VitaTest.Modules.Orders.ViewModels
         private async Task InitializeData()
         {
             await _unitOfWork.ClearChanges();
-            Orders = (await _unitOfWork.OrderRepository.GetAllAsync()).ToList();
+            Orders = await _unitOfWork.OrderRepository.GetAllAsync();
+            AvailableIncomes = await _unitOfWork.IncomeRepository.GetAvailableIncomesAsync();
             Balance = await _unitOfWork.IncomeRepository.GetCurrentBalanceAsync();
         }
 
@@ -104,9 +119,9 @@ namespace VitaTest.Modules.Orders.ViewModels
                 UpdatedAt = nowTime
             });
 
-            var updatesCount = await _unitOfWork.SaveChangesAsync();
+            var result = await _unitOfWork.SaveChangesAsync();
 
-            if (updatesCount == 0)
+            if (string.IsNullOrEmpty(result))
             {
                 await InitializeData();
                 _notificationService.Notify("Платёж успешно добавлен.", NotifyType.Info);
@@ -115,41 +130,58 @@ namespace VitaTest.Modules.Orders.ViewModels
             }
             else
             {
-                _notificationService.Notify("Не удалось добавить платёж.", NotifyType.Error);
+                _notificationService.Notify($"Ошибка: {result}", NotifyType.Error);
             }
         }
 
         private async void Pay(Order order)
         {
-            if (_paySum == 0)
+            if (SelectedIncome is null)
             {
-                _notificationService.Notify("Сумма оплаты должна быть больше 0.", NotifyType.Warning);
+                _notificationService.Notify("Необходимо выбрать пополнение для оплаты.", NotifyType.Warning);
                 return;
             }
 
-            if (_paySum > order.BalanceToPay)
+            await _unitOfWork.ClearChanges();
+
+            var orderFromDb = await _unitOfWork.OrderRepository.GetAsync(order.ID);
+
+            if (orderFromDb.UpdatedAt > order.UpdatedAt)
             {
-                _notificationService.Notify("Сумма оплаты не может быть больше необходимой в заказе.", NotifyType.Warning);
+                _notificationService.Notify("Не удалось выполнить операцию. Состояние заказа изменилось.", NotifyType.Warning);
+                _dataUpdateService.RaiseDataUpdate();
                 return;
             }
 
-            if (_balance < _paySum)
+            var incomeFromDb = await _unitOfWork.IncomeRepository.GetAsync(_selectedIncome.ID);
+
+            if (incomeFromDb.UpdatedAt > _selectedIncome.UpdatedAt)
             {
-                _notificationService.Notify("Недостаточно средств для совершения платежа.", NotifyType.Warning);
+                _notificationService.Notify("Не удалось выполнить операцию. Состояние пополнения изменилось.", NotifyType.Warning);
+                _dataUpdateService.RaiseDataUpdate();
                 return;
             }
 
-            await _unitOfWork.ProcedureRepository.ProcessPayment(PaySum, order.ID);
+            await _unitOfWork.PaymentRepository.AddAsync(new Payment
+            {
+                OrderId = order.ID,
+                IncomeId = _selectedIncome.ID,
+                CreatedAt = DateTime.Now,
+                PaymentAmount = _paySum
+            });
+
             var result = await _unitOfWork.SaveChangesAsync();
 
-            if (result == 0)
+            if (string.IsNullOrEmpty(result))
             {
                 _notificationService.Notify("Оплата прошла успешно.", NotifyType.Info);
             }
             else
             {
-                _notificationService.Notify("Не удалось провести оплату.", NotifyType.Error);
+                _notificationService.Notify($"Ошибка: {result}", NotifyType.Error);
             }
+
+            PaySum = 0;
         }
     }
 }

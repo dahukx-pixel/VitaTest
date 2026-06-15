@@ -11,9 +11,31 @@ namespace VitaTest.Infrastructure.Repositories
         {
         }
 
+        public async Task<List<Income>> GetAvailableIncomesAsync()
+        {
+            try
+            {
+                return await Context.Incomes.Where(i => i.Balance > 0).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                //Logger
+                return new List<Income>();
+            }
+        }
+
         public async Task<decimal> GetCurrentBalanceAsync()
         {
-            return await Context.Incomes.Where(i => i.Balance > 0).SumAsync(i => i.Balance);
+            try
+            {
+                return await Context.Incomes.Where(i => i.Balance > 0).SumAsync(i => i.Balance);
+            }
+            catch (Exception ex)
+            {
+                //Logger
+
+                return 0;
+            }
         }
     }
 }

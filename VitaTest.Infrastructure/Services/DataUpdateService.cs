@@ -1,6 +1,6 @@
 ﻿using VitaTest.Infrastructure.Interfaces;
 
-namespace VitaTest.Infrastructure
+namespace VitaTest.Infrastructure.Services
 {
     public class DataUpdateService : IDataUpdateService
     {

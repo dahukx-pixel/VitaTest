@@ -8,17 +8,21 @@ namespace VitaTest.Infrastructure
 {
     public class UnitOfWork : IUnitOfWork
     {
+        private readonly ISettingsService _settingsService;
         private readonly IDataUpdateService _dataUpdateService;
         private readonly IDbContextFactory<VitaDatabase> _contextFactory;
         private VitaDatabase _context;
 
         private VitaDatabase Context => _context ??= _contextFactory.CreateDbContext();
 
-        private readonly IOrderRepository _orderRepository;
-        private readonly IIncomeRepository _incomeRepository;
-        private readonly IPaymentRepository _paymentRepository;
-        private readonly IDatabaseVersionRepository _dataBaseVersionRepository;
-        private readonly IProcedureRepository _procedureRepository;
+        private IOrderRepository _orderRepository;
+        private IIncomeRepository _incomeRepository;
+        private IPaymentRepository _paymentRepository;
+        private IDatabaseVersionRepository _dataBaseVersionRepository;
+        private IProcedureRepository _procedureRepository;
+
+        private object _reinitializeLocker;
+
         public IOrderRepository OrderRepository => _orderRepository;
         public IIncomeRepository IncomeRepository => _incomeRepository;
         public IPaymentRepository PaymentRepository => _paymentRepository;
@@ -27,12 +31,24 @@ namespace VitaTest.Infrastructure
 
         public event EventHandler? DatabaseUpdated;
 
+
+
         public UnitOfWork(IDbContextFactory<VitaDatabase> contextFactory,
-                          IDataUpdateService dataUpdateService)
+                          IDataUpdateService dataUpdateService,
+                          ISettingsService settingsService)
         {
             _contextFactory = contextFactory;
             _dataUpdateService = dataUpdateService;
+            _settingsService = settingsService;
+            _reinitializeLocker = new();
 
+            _settingsService.OnChanged += ReinitializeDb;
+
+            InitializeRepositories();
+        }
+
+        private void InitializeRepositories()
+        {
             _orderRepository = new OrderRepository(Context);
             _incomeRepository = new IncomeRepository(Context);
             _paymentRepository = new PaymentRepository(Context);
@@ -40,7 +56,25 @@ namespace VitaTest.Infrastructure
             _procedureRepository = new ProcedureRepository(Context);
         }
 
-        public async Task<int> SaveChangesAsync()
+        private void ReinitializeDb(object? sender, EventArgs e)
+        {
+            try
+            {
+                lock (_reinitializeLocker)
+                {
+                    _context?.Dispose();
+                    _context = null;
+
+                    InitializeRepositories();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка пересоздания БД: {ex.Message}");
+            }
+        }
+
+        public async Task<string> SaveChangesAsync()
         {
             try
             {
@@ -51,11 +85,12 @@ namespace VitaTest.Infrastructure
                     _dataUpdateService.RaiseDataUpdate();
                 }
 
-                return result;
+                return string.Empty;
             }
-            catch
+            catch (Exception ex)
             {
-                return 1;
+                //logger
+                return ex.InnerException?.Message ?? ex.Message;
             }
         }
 

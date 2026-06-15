@@ -41,7 +41,7 @@ namespace VitaTest.Infrastructure.Repositories
             }
         }
 
-        public virtual async Task<IEnumerable<T>?> GetAllAsync()
+        public virtual async Task<List<T>> GetAllAsync()
         {
             try
             {
@@ -50,7 +50,7 @@ namespace VitaTest.Infrastructure.Repositories
             catch (Exception ex)
             {
                 //TODO: logger
-                return null;
+                return new List<T>();
             }
         }
 

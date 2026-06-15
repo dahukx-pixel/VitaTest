@@ -71,14 +71,16 @@ namespace VitaTest.Modules.Incomes.ViewModels
             });
             var result = await _unitOfWork.SaveChangesAsync();
 
-            if (result == 0)
+            if (string.IsNullOrEmpty(result))
             {
                 _notificationService.Notify("Пополнение прошло успешно.", NotifyType.Info);
             }
             else
             {
-                _notificationService.Notify("Не удалось внести средства.", NotifyType.Error);
+                _notificationService.Notify($"Ошибка: {result}", NotifyType.Error);
             }
+
+            IncomeSum = 0;
         }
 
         private async Task InitializeData()

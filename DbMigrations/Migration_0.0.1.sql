@@ -21,39 +21,38 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE [dbo].[SP_ProcessPayment_FIFO]
-    @PaymentAmount DECIMAL(18, 2),
-    @OrderID INT
+-- =============================================
+-- ТРИГГЕР 1: Обновление таблицы Orders
+-- =============================================
+CREATE OR ALTER TRIGGER [dbo].[TR_Payments_UpdateOrders]
+ON [dbo].[Payments]
+AFTER INSERT
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @IncomeID INT;
-    DECLARE @RemainingAmount DECIMAL(18, 2);
-    DECLARE @CurrentBalance DECIMAL(18, 2);
-    DECLARE @DeductAmount DECIMAL(18, 2);
-    DECLARE @TotalBalance DECIMAL(18, 2);
+    DECLARE @OrderID INT;
+    DECLARE @PaymentAmount DECIMAL(18, 2);
     DECLARE @OrderTotalAmount DECIMAL(18, 2);
     DECLARE @OrderPaidAmount DECIMAL(18, 2);
     DECLARE @OrderRemainingAmount DECIMAL(18, 2);
-    DECLARE @ErrorMessage NVARCHAR(500);
 
     BEGIN TRY
-        BEGIN TRANSACTION;
+        SELECT 
+            @OrderID = OrderID,
+            @PaymentAmount = PaymentAmount
+        FROM inserted;
 
-        -- Проверка 1: PaymentAmount должен быть положительным
         IF @PaymentAmount <= 0
         BEGIN
             THROW 50001, N'Сумма платежа должна быть положительной.', 1;
         END
 
-        -- Проверка 2: Заказ должен существовать
         IF NOT EXISTS (SELECT 1 FROM [dbo].[Orders] WHERE ID = @OrderID)
         BEGIN
             THROW 50002, N'Указанный заказ не существует.', 1;
         END
 
-        -- Получаем информацию о заказе
         SELECT 
             @OrderTotalAmount = TotalAmount,
             @OrderPaidAmount = PaidAmount
@@ -62,81 +61,78 @@ BEGIN
 
         SET @OrderRemainingAmount = @OrderTotalAmount - @OrderPaidAmount;
 
-        -- Проверка 3: Сумма платежа не должна превышать остаток к оплате заказа
         IF @PaymentAmount > @OrderRemainingAmount
         BEGIN
-            SET @ErrorMessage = N'Сумма платежа превышает остаток к оплате заказа. Остаток: ' + CAST(@OrderRemainingAmount AS NVARCHAR(20));
-            THROW 50004, @ErrorMessage, 1;
+            DECLARE @ErrorMessage NVARCHAR(500) = 
+                N'Сумма платежа (' + CAST(@PaymentAmount AS NVARCHAR(20)) + 
+                N') превышает остаток к оплате (' + CAST(@OrderRemainingAmount AS NVARCHAR(20)) + N').';
+            THROW 50003, @ErrorMessage, 1;
         END
-
-        -- Проверка 4: Общая сумма балансов должна быть достаточной
-        SELECT @TotalBalance = SUM(Balance) 
-        FROM [dbo].[Incomes] 
-        WHERE Balance > 0;
-
-        IF @TotalBalance < @PaymentAmount
-        BEGIN
-            SET @ErrorMessage = N'Недостаточно средств на балансах приходов денег. Доступно: ' + CAST(@TotalBalance AS NVARCHAR(20)) + N', требуется: ' + CAST(@PaymentAmount AS NVARCHAR(20));
-            THROW 50005, @ErrorMessage, 1;
-        END
-
-        SET @RemainingAmount = @PaymentAmount;
-
-        -- Курсор для получения самых старых записей Incomes
-        DECLARE income_cursor CURSOR FOR
-        SELECT ID
-        FROM [dbo].[Incomes]
-        WHERE Balance > 0
-        ORDER BY [CreatedAt] ASC, ID ASC;
-
-        OPEN income_cursor;
-        FETCH NEXT FROM income_cursor INTO @IncomeID;
-
-        WHILE @@FETCH_STATUS = 0 AND @RemainingAmount > 0
-        BEGIN
-            SELECT @CurrentBalance = Balance 
-            FROM [dbo].[Incomes] 
-            WHERE ID = @IncomeID;
-
-            IF @CurrentBalance >= @RemainingAmount
-                SET @DeductAmount = @RemainingAmount;
-            ELSE
-                SET @DeductAmount = @CurrentBalance;
-
-			--Запись в Payments
-			INSERT INTO [dbo].[Payments] ([OrderID], [IncomeID], [PaymentAmount], [CreatedAt])
-            VALUES (@OrderID, @IncomeID, @DeductAmount, GETDATE());
-
-			--Обновление баланса в Incomes
-            UPDATE [dbo].[Incomes]
-            SET Balance = Balance - @DeductAmount,
-                UpdatedAt = GETDATE()
-            WHERE ID = @IncomeID;
-
-            SET @RemainingAmount = @RemainingAmount - @DeductAmount;
-
-            FETCH NEXT FROM income_cursor INTO @IncomeID;
-        END
-
-        CLOSE income_cursor;
-        DEALLOCATE income_cursor;
 
         UPDATE [dbo].[Orders]
         SET PaidAmount = PaidAmount + @PaymentAmount,
             UpdatedAt = GETDATE()
         WHERE ID = @OrderID;
 
-        COMMIT TRANSACTION;
-
-        PRINT N'Платеж успешно обработан. Сумма: ' + CAST(@PaymentAmount AS NVARCHAR(20));
     END TRY
     BEGIN CATCH
-        IF CURSOR_STATUS('global', 'income_cursor') >= 0
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH
+END;
+GO
+
+-- =============================================
+-- ТРИГГЕР 2: Обновление таблицы Incomes
+-- =============================================
+CREATE OR ALTER TRIGGER [dbo].[TR_Payments_UpdateIncomes]
+ON [dbo].[Payments]
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @IncomeID INT;
+    DECLARE @PaymentAmount DECIMAL(18, 2);
+    DECLARE @IncomeBalance DECIMAL(18, 2);
+
+    BEGIN TRY
+        SELECT 
+            @IncomeID = IncomeID,
+            @PaymentAmount = PaymentAmount
+        FROM inserted;
+
+        IF @PaymentAmount <= 0
         BEGIN
-            CLOSE income_cursor;
-            DEALLOCATE income_cursor;
+            THROW 50004, N'Сумма платежа должна быть положительной.', 1;
         END
 
+        IF NOT EXISTS (SELECT 1 FROM [dbo].[Incomes] WHERE ID = @IncomeID)
+        BEGIN
+            THROW 50005, N'Указанный приход денег не существует.', 1;
+        END
+
+        SELECT @IncomeBalance = Balance
+        FROM [dbo].[Incomes]
+        WHERE ID = @IncomeID;
+
+        IF @PaymentAmount > @IncomeBalance
+        BEGIN
+            DECLARE @ErrorMessage NVARCHAR(500) = 
+                N'Сумма платежа (' + CAST(@PaymentAmount AS NVARCHAR(20)) + 
+                N') превышает баланс прихода денег (' + CAST(@IncomeBalance AS NVARCHAR(20)) + N').';
+            THROW 50006, @ErrorMessage, 1;
+        END
+
+        UPDATE [dbo].[Incomes]
+        SET Balance = Balance - @PaymentAmount,
+            UpdatedAt = GETDATE()
+        WHERE ID = @IncomeID;
+
+    END TRY
+    BEGIN CATCH
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
 

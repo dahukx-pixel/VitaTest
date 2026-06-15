@@ -14,6 +14,6 @@ namespace VitaTest.Infrastructure.Interfaces
 
         Task<bool> ClearChanges();
         void Dispose();
-        Task<int> SaveChangesAsync();
+        Task<string> SaveChangesAsync();
     }
 }

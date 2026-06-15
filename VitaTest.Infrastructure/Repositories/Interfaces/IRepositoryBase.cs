@@ -7,7 +7,7 @@ namespace VitaTest.Infrastructure.Repositories.Interfaces
     {
         Task<T?> GetAsync(int id);
         Task<IEnumerable<T>?> GetAsync(Expression<Func<T, bool>> selector);
-        Task<IEnumerable<T>?> GetAllAsync();
+        Task<List<T>> GetAllAsync();
         Task<T?> AddAsync(T newEntity);
         Task<IEnumerable<T>?> AddRangeAsync(IEnumerable<T> newEntities);
         Task RemoveAsync(int id);

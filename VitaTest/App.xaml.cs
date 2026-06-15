@@ -10,9 +10,9 @@ using System.Windows;
 using VitaTest.AppCore;
 using VitaTest.AppCore.Services;
 using VitaTest.AppCore.Services.Interfaces;
-using VitaTest.Infrastructure;
 using VitaTest.Infrastructure.Database;
 using VitaTest.Infrastructure.Interfaces;
+using VitaTest.Infrastructure.Services;
 using VitaTest.Modules.Incomes;
 using VitaTest.Modules.Orders;
 using VitaTest.Modules.Payments;
@@ -44,18 +44,16 @@ namespace VitaTest
             var settings = ConfigureAppSettings(containerRegistry);
             ConfigureDatabase(containerRegistry, settings);
 
-
-            containerRegistry.RegisterSingleton<ISettingsService, SettingsService>();
-
             var notifiesQueue = new SnackbarMessageQueue(TimeSpan.FromSeconds(3));
             containerRegistry.RegisterInstance<ISnackbarMessageQueue>(notifiesQueue);
             containerRegistry.RegisterSingleton<INotificationService, SnackBarNotificationService>();
+            containerRegistry.RegisterSingleton<IDataUpdateService, DataUpdateService>();
         }
 
         private AppSettings ConfigureAppSettings(IContainerRegistry containerRegistry)
         {
             var configuration = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
-                                                          .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                                                          .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
                                                           .Build();
 
             containerRegistry.RegisterInstance<IConfiguration>(configuration);
@@ -65,17 +63,23 @@ namespace VitaTest
 
             containerRegistry.RegisterInstance(settings);
             containerRegistry.RegisterInstance(Options.Create(settings));
-            containerRegistry.RegisterSingleton<IDataUpdateService, DataUpdateService>();
+            containerRegistry.RegisterSingleton<ISettingsService, SettingsService>();
 
             return settings;
         }
 
         private void ConfigureDatabase(IContainerRegistry containerRegistry, AppSettings settings)
         {
-            var connectionString = BuildConnectionString(settings);
+            containerRegistry.RegisterSingleton<IDbContextFactory<VitaDatabase>>(() =>
+            {
+                var containerExtension = containerRegistry as IContainerExtension;
+                var settingsService = containerExtension?.Resolve<ISettingsService>();
 
-            containerRegistry.RegisterInstance<IDbContextFactory<VitaDatabase>>(
-                new VitaDatabaseFactory(connectionString));
+                if (settingsService == null)
+                    throw new InvalidOperationException("Не удалось получить SettingsService");
+
+                return new VitaDatabaseFactory(settingsService, BuildConnectionString);
+            });
         }
 
         private string BuildConnectionString(AppSettings settings)

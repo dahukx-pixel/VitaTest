@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using VitaTest.Domain.Models;
 
 namespace VitaTest.Infrastructure.Database
@@ -15,6 +16,11 @@ namespace VitaTest.Infrastructure.Database
 
         }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.LogTo(Console.WriteLine, LogLevel.Information);
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Payment>()
@@ -26,6 +32,10 @@ namespace VitaTest.Infrastructure.Database
                         .HasOne(p => p.Income)
                         .WithMany(i => i.Payments)
                         .HasForeignKey(p => p.IncomeId);
+
+            modelBuilder.Entity<Payment>()
+                        .Metadata
+                        .UseSqlOutputClause(false);
         }
     }
 }

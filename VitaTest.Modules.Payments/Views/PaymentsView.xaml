@@ -8,19 +8,32 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
              xmlns:prism="http://prismlibrary.com/"
-             prism:ViewModelLocator.AutoWireViewModel="True" >
+             prism:ViewModelLocator.AutoWireViewModel="True"
+             xmlns:converters="clr-namespace:VitaTest.AppCore.Converters;assembly=VitaTest.AppCore">
+
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="50"/>
+            <RowDefinition Height="100"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0">
-            <TextBlock Text="Платежи"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center"
-                       FontSize="17"
-                       FontWeight="Bold"/>
+            <DockPanel VerticalAlignment="Center"
+                       Margin="20,0,0,0">
+                <materialDesign:PackIcon Kind="Payment"
+                                         Height="30"
+                                         Width="30"
+                                         VerticalAlignment="Center"
+                                         Margin="0,0,5,0"
+                                         Background="{StaticResource HeaderIconColor}"
+                                         Foreground="White"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="История платежей"
+                               Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                               FontWeight="Bold"/>
+                    <TextBlock Text="Просмотр всех платежей"/>
+                </StackPanel>
+            </DockPanel>
         </Grid>
 
         <ScrollViewer Grid.Row="1">
@@ -29,17 +42,42 @@
                     <DataTemplate>
                         <Border CornerRadius="10"
                                 Padding="10"
-                                Background="#e4e4e4"
-                                Margin="10">
-                            <StackPanel>
-                                <TextBlock Text="{Binding ID, StringFormat='Номер: {0}'}"
-                                           FontWeight="Bold"
-                                           FontSize="17"/>
-                                <TextBlock Text="{Binding OrderId, StringFormat='Номер заказа: {0}'}"/>
-                                <TextBlock Text="{Binding IncomeId, StringFormat='Номер поступления: {0}'}"/>
-                                <TextBlock Text="{Binding PaymentAmount, StringFormat='Сумма платежа: {0}'}"/>
-                                <TextBlock Text="{Binding CreatedAt, StringFormat='Создано: {0:dd.MM.yyyy}'}"/>
-                            </StackPanel>
+                                Margin="10"
+                                Background="#e9e9e9">
+                            <DockPanel>
+                                <materialDesign:PackIcon Kind="ArrowBottomLeft"
+                                                         VerticalAlignment="Center"
+                                                         Margin="0, 0, 10, 0"
+                                                         Foreground="{StaticResource HeaderIconColor}"/>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding ID, StringFormat='Платёж #{0}'}"
+                                               Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                               FontWeight="Bold"/>
+                                    <DockPanel>
+                                        <DockPanel>
+                                            <materialDesign:PackIcon Kind="Cube"
+                                                                     Margin="0, 0, 3, 0"/>
+                                            <TextBlock Text="{Binding OrderId, StringFormat='Заказ {0}'}"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="15,0">
+                                            <materialDesign:PackIcon Kind="Hashtag"
+                                                                     Margin="0, 0, 3, 0"/>
+                                            <TextBlock Text="{Binding IncomeId, StringFormat='Поступление {0}'}"/>
+                                        </DockPanel>
+                                        <DockPanel>
+                                            <materialDesign:PackIcon Kind="Calendar"
+                                                                     Margin="0, 0, 3, 0"/>
+                                            <TextBlock Text="{Binding CreatedAt, StringFormat=dd.MM.yyyy hh:mm:ss}"/>
+                                        </DockPanel>
+                                    </DockPanel>
+                                </StackPanel>
+
+                                <TextBlock Text="{Binding PaymentAmount, StringFormat=' {0} ₽'}"
+                                           Style="{StaticResource MaterialDesignBody1TextBlock}"
+                                           HorizontalAlignment="Right"
+                                           VerticalAlignment="Center"
+                                           FontWeight="Bold"/>
+                            </DockPanel>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

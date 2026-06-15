@@ -6,6 +6,9 @@
              xmlns:prism="http://prismlibrary.com/" >
     <Application.Resources>
         <ResourceDictionary>
+
+            <SolidColorBrush x:Key="HeaderIconColor" Color="#2FACA0"/>
+
             <ResourceDictionary.MergedDictionaries>
                 
                 <materialDesign:BundledTheme BaseTheme="Light" 

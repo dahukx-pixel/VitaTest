@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using VitaTest.AppCore;
 using VitaTest.AppCore.Enums;
 using VitaTest.AppCore.Services.Interfaces;
+using VitaTest.Infrastructure.Interfaces;
 using VitaTest.Modules.Settings.Validators;
 
 namespace VitaTest.Modules.Settings.ViewModels

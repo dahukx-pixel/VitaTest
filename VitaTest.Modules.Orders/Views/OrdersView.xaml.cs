@@ -15,14 +15,12 @@ namespace VitaTest.Modules.Orders.Views
             InitializeComponent();
         }
 
-        private async void PayButtonClick(object sender, RoutedEventArgs e)
+        private async void OpenHostDialogButtonClick(object sender, RoutedEventArgs e)
         {
             var button = sender as Button;
             var order = button.Tag as Order;
 
-            if (order == null) return;
-            // Открываем диалог с передачей объекта
-            await DialogHost.Show(order, "MainDialogHost");
+            await DialogHost.Show(order ?? new object(), "MainDialogHost");
         }
     }
 }
