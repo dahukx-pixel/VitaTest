@@ -175,13 +175,12 @@ namespace VitaTest.Modules.Orders.ViewModels
             if (string.IsNullOrEmpty(result))
             {
                 _notificationService.Notify("Оплата прошла успешно.", NotifyType.Info);
+                PaySum = 0;
             }
             else
             {
                 _notificationService.Notify($"Ошибка: {result}", NotifyType.Error);
             }
-
-            PaySum = 0;
         }
     }
 }
