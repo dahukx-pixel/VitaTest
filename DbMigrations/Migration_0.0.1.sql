@@ -63,9 +63,7 @@ BEGIN
 
         IF @PaymentAmount > @OrderRemainingAmount
         BEGIN
-            DECLARE @ErrorMessage NVARCHAR(500) = 
-                N'Сумма платежа (' + CAST(@PaymentAmount AS NVARCHAR(20)) + 
-                N') превышает остаток к оплате (' + CAST(@OrderRemainingAmount AS NVARCHAR(20)) + N').';
+            DECLARE @ErrorMessage NVARCHAR(500) = N'Сумма платежа (' + CAST(@PaymentAmount AS NVARCHAR(20)) + N') превышает остаток к оплате (' + CAST(@OrderRemainingAmount AS NVARCHAR(20)) + N').';
             THROW 50003, @ErrorMessage, 1;
         END
 
@@ -120,9 +118,7 @@ BEGIN
 
         IF @PaymentAmount > @IncomeBalance
         BEGIN
-            DECLARE @ErrorMessage NVARCHAR(500) = 
-                N'Сумма платежа (' + CAST(@PaymentAmount AS NVARCHAR(20)) + 
-                N') превышает баланс прихода денег (' + CAST(@IncomeBalance AS NVARCHAR(20)) + N').';
+            DECLARE @ErrorMessage NVARCHAR(500) = N'Сумма платежа (' + CAST(@PaymentAmount AS NVARCHAR(20)) + N') превышает баланс прихода денег (' + CAST(@IncomeBalance AS NVARCHAR(20)) + N').';
             THROW 50006, @ErrorMessage, 1;
         END
 
